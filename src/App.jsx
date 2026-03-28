@@ -47,29 +47,106 @@ const VIBES = ["All", ...Array.from(new Set(movies.map(m => m.vibe))).sort()];
 const GENRES = ["All", ...Array.from(new Set(movies.map(m => m.genre))).sort()];
 
 const rtColor = (rt) => {
-  if (rt === null) return "#888";
-  if (rt >= 75) return "#22c55e";
-  if (rt >= 50) return "#eab308";
-  return "#ef4444";
+  if (rt === null) return "#71717a";
+  if (rt >= 75) return "#4ade80";
+  if (rt >= 50) return "#fb923c";
+  return "#f87171";
 };
 
 const audienceColor = (a) => {
-  if (a === null) return "#888";
-  if (a >= 85) return "#22c55e";
-  if (a >= 70) return "#eab308";
-  return "#ef4444";
+  if (a === null) return "#71717a";
+  if (a >= 85) return "#4ade80";
+  if (a >= 70) return "#fb923c";
+  return "#f87171";
 };
 
-const selectStyle = {
-  background: "#1a1a1a",
-  border: "1px solid #333",
-  borderRadius: 6,
-  padding: "7px 12px",
-  color: "#e5e5e5",
-  fontSize: 13,
-  outline: "none",
-  cursor: "pointer",
-};
+const styles = `
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #141416; }
+
+  .app { background: #141416; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #fafafa; padding: 24px 16px; }
+
+  .header { margin-bottom: 24px; }
+  .header h1 { font-size: 22px; font-weight: 600; color: #fafafa; letter-spacing: -0.3px; }
+  .header p { margin-top: 4px; color: #71717a; font-size: 14px; }
+
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .filters input, .filters select {
+    background: #27272a; border: 1px solid #3f3f46; border-radius: 8px;
+    padding: 8px 12px; color: #fafafa; font-size: 14px; outline: none;
+    -webkit-appearance: none; appearance: none;
+  }
+  .filters input { flex: 1; min-width: 140px; }
+  .filters input::placeholder { color: #71717a; }
+  .filters select { cursor: pointer; min-width: 120px; }
+  .shown { font-size: 13px; color: #52525b; margin-left: auto; align-self: center; white-space: nowrap; }
+
+  /* Desktop table */
+  .table-wrap { display: none; overflow-x: auto; border-radius: 10px; border: 1px solid #27272a; }
+  @media (min-width: 768px) {
+    .table-wrap { display: block; }
+    .cards { display: none; }
+    .app { padding: 32px 24px; }
+    .header h1 { font-size: 26px; }
+    .filters input { min-width: 200px; }
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  thead { background: #18181b; }
+  th {
+    padding: 11px 14px; text-align: left; font-size: 11px; font-weight: 600;
+    letter-spacing: 0.07em; text-transform: uppercase; color: #71717a;
+    border-bottom: 1px solid #27272a; cursor: pointer; user-select: none; white-space: nowrap;
+  }
+  th:hover { color: #a1a1aa; }
+  th.active { color: #fb923c; }
+  td { padding: 11px 14px; border-bottom: 1px solid #1f1f22; }
+  tr:last-child td { border-bottom: none; }
+  tr.watched td { opacity: 1; }
+  tr.watched .title-cell { color: #52525b; text-decoration: line-through; }
+  tr:not(.watched):hover td { background: #1c1c1f; }
+  tr.watched { background: #141416; }
+
+  .title-cell { font-weight: 500; color: #fafafa; white-space: nowrap; }
+  .year-cell { color: #71717a; }
+  .genre-cell { color: #a1a1aa; }
+  .rating-cell { color: #71717a; font-size: 12px; }
+  .runtime-cell { color: #71717a; }
+  .vibe-pill {
+    display: inline-block; background: #27272a; border: 1px solid #3f3f46;
+    border-radius: 4px; padding: 2px 8px; font-size: 11px; color: #a1a1aa; white-space: nowrap;
+  }
+
+  .mark-btn {
+    background: transparent; border: 1px solid #3f3f46; border-radius: 6px;
+    padding: 4px 10px; font-size: 12px; color: #a1a1aa; cursor: pointer; white-space: nowrap;
+  }
+  .mark-btn:hover { border-color: #71717a; color: #fafafa; }
+  .mark-btn.seen { background: #14532d; border-color: #166534; color: #4ade80; }
+
+  /* Mobile cards */
+  .cards { display: flex; flex-direction: column; gap: 10px; }
+  .card {
+    background: #18181b; border: 1px solid #27272a; border-radius: 10px; padding: 14px;
+  }
+  .card.watched { border-color: #1f1f22; }
+  .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+  .card-title { font-size: 15px; font-weight: 500; color: #fafafa; line-height: 1.3; }
+  .card.watched .card-title { color: #52525b; text-decoration: line-through; }
+  .card-year { font-size: 13px; color: #71717a; margin-top: 2px; }
+  .card-scores { display: flex; gap: 12px; margin-bottom: 10px; }
+  .score-item { display: flex; flex-direction: column; gap: 2px; }
+  .score-label { font-size: 10px; color: #52525b; text-transform: uppercase; letter-spacing: 0.05em; }
+  .score-val { font-size: 15px; font-weight: 600; }
+  .card-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .tag {
+    background: #27272a; border: 1px solid #3f3f46; border-radius: 4px;
+    padding: 3px 8px; font-size: 11px; color: #a1a1aa;
+  }
+  .card-footer { display: flex; align-items: center; justify-content: space-between; }
+  .card-meta { font-size: 12px; color: #52525b; }
+  .footer-note { margin-top: 20px; font-size: 11px; color: #3f3f46; text-align: center; }
+`;
 
 export default function App() {
   const [watched, setWatched] = useState({});
@@ -81,7 +158,6 @@ export default function App() {
   const [filterWatched, setFilterWatched] = useState("All");
   const [search, setSearch] = useState("");
 
-  // Load watched statuses from DB on page load
   useEffect(() => {
     fetch(`${API}/api/watched`)
       .then(res => res.json())
@@ -101,19 +177,15 @@ export default function App() {
 
   const toggleWatched = async (title) => {
     const newVal = !watched[title];
-    // Update UI immediately (optimistic update)
     setWatched(prev => ({ ...prev, [title]: newVal }));
-    // Save to DB
     try {
       await fetch(`${API}/api/watched/${encodeURIComponent(title)}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ watched: newVal }),
       });
-    } catch (err) {
-      // Revert if save failed
+    } catch {
       setWatched(prev => ({ ...prev, [title]: !newVal }));
-      console.error("Failed to save:", err);
     }
   };
 
@@ -137,103 +209,114 @@ export default function App() {
       });
   }, [data, sortKey, sortDir, filterVibe, filterGenre, filterWatched, search]);
 
-  const SortIcon = ({ col }) => {
-    if (sortKey !== col) return <span style={{ opacity: 0.3, fontSize: 10 }}>⇅</span>;
-    return <span style={{ fontSize: 10 }}>{sortDir === "asc" ? "↑" : "↓"}</span>;
-  };
-
-  const Th = ({ label, col }) => (
-    <th
-      onClick={() => handleSort(col)}
-      style={{ cursor: "pointer", padding: "10px 14px", textAlign: "left", whiteSpace: "nowrap", fontWeight: 600, fontSize: 12, letterSpacing: "0.06em", textTransform: "uppercase", color: sortKey === col ? "#f0c040" : "#aaa", borderBottom: "1px solid #2a2a2a", userSelect: "none" }}
-    >
-      {label} <SortIcon col={col} />
-    </th>
-  );
-
   const watchedCount = Object.values(watched).filter(Boolean).length;
 
+  const SortIcon = ({ col }) => (
+    <span style={{ marginLeft: 4, opacity: sortKey === col ? 1 : 0.3, fontSize: 10 }}>
+      {sortKey === col ? (sortDir === "asc" ? "↑" : "↓") : "⇅"}
+    </span>
+  );
+
   return (
-    <div style={{ background: "#0d0d0d", minHeight: "100vh", fontFamily: "'Georgia', serif", color: "#e5e5e5", padding: "32px 24px" }}>
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontFamily: "'Georgia', serif", fontSize: 28, fontWeight: 700, margin: 0, color: "#f0c040", letterSpacing: "-0.5px" }}>
-          Robbie Watch List
-        </h1>
-        <p style={{ margin: "4px 0 0", color: "#666", fontSize: 13 }}>{movies.length} films &middot; {watchedCount} watched</p>
-      </div>
+    <>
+      <style>{styles}</style>
+      <div className="app">
+        <div className="header">
+          <h1>Robbie Watch List</h1>
+          <p>{movies.length} films &middot; {watchedCount} watched{loading ? " · loading..." : ""}</p>
+        </div>
 
-      {loading && <p style={{ color: "#555", fontSize: 13 }}>Loading...</p>}
+        <div className="filters">
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search title or actor..."
+          />
+          <select value={filterVibe} onChange={e => setFilterVibe(e.target.value)}>
+            {VIBES.map(v => <option key={v}>{v}</option>)}
+          </select>
+          <select value={filterGenre} onChange={e => setFilterGenre(e.target.value)}>
+            {GENRES.map(g => <option key={g}>{g}</option>)}
+          </select>
+          <select value={filterWatched} onChange={e => setFilterWatched(e.target.value)}>
+            <option>All</option>
+            <option>Watched</option>
+            <option>Unwatched</option>
+          </select>
+          <span className="shown">{filtered.length} shown</span>
+        </div>
 
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 20, alignItems: "center" }}>
-        <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Search title or actor..."
-          style={{ background: "#1a1a1a", border: "1px solid #333", borderRadius: 6, padding: "7px 12px", color: "#e5e5e5", fontSize: 13, width: 200, outline: "none" }}
-        />
-        <select value={filterVibe} onChange={e => setFilterVibe(e.target.value)} style={selectStyle}>
-          {VIBES.map(v => <option key={v}>{v}</option>)}
-        </select>
-        <select value={filterGenre} onChange={e => setFilterGenre(e.target.value)} style={selectStyle}>
-          {GENRES.map(g => <option key={g}>{g}</option>)}
-        </select>
-        <select value={filterWatched} onChange={e => setFilterWatched(e.target.value)} style={selectStyle}>
-          <option>All</option>
-          <option>Watched</option>
-          <option>Unwatched</option>
-        </select>
-        <span style={{ marginLeft: "auto", fontSize: 12, color: "#555" }}>{filtered.length} shown</span>
-      </div>
-
-      <div style={{ overflowX: "auto", borderRadius: 10, border: "1px solid #222" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-          <thead style={{ background: "#141414" }}>
-            <tr>
-              <Th label="Title" col="title" />
-              <Th label="Year" col="year" />
-              <Th label="RT%" col="rt" />
-              <Th label="Audience%" col="audience" />
-              <Th label="Genre" col="genre" />
-              <Th label="Vibe" col="vibe" />
-              <Th label="Rating" col="rating" />
-              <Th label="Runtime" col="runtime" />
-              <th style={{ padding: "10px 14px", fontSize: 12, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "#aaa", borderBottom: "1px solid #2a2a2a" }}>Watched</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((m, i) => (
-              <tr
-                key={m.title}
-                style={{ background: m.watched ? "#0f1a0f" : (i % 2 === 0 ? "#111" : "#131313"), opacity: m.watched ? 0.65 : 1 }}
-                onMouseEnter={e => e.currentTarget.style.background = "#1c1c1c"}
-                onMouseLeave={e => e.currentTarget.style.background = m.watched ? "#0f1a0f" : (i % 2 === 0 ? "#111" : "#131313")}
-              >
-                <td style={{ padding: "10px 14px", fontWeight: 600, color: m.watched ? "#888" : "#f0f0f0", textDecoration: m.watched ? "line-through" : "none", whiteSpace: "nowrap" }}>{m.title}</td>
-                <td style={{ padding: "10px 14px", color: "#888" }}>{m.year}</td>
-                <td style={{ padding: "10px 14px", fontWeight: 700, color: rtColor(m.rt) }}>{m.rt !== null ? `${m.rt}%` : "—"}</td>
-                <td style={{ padding: "10px 14px", fontWeight: 700, color: audienceColor(m.audience) }}>{m.audience !== null ? `${m.audience}%` : "—"}</td>
-                <td style={{ padding: "10px 14px", color: "#bbb" }}>{m.genre}</td>
-                <td style={{ padding: "10px 14px" }}>
-                  <span style={{ background: "#1e1e1e", border: "1px solid #333", borderRadius: 4, padding: "2px 8px", fontSize: 11, color: "#ccc", whiteSpace: "nowrap" }}>{m.vibe}</span>
-                </td>
-                <td style={{ padding: "10px 14px", color: "#888", fontSize: 12 }}>{m.rating}</td>
-                <td style={{ padding: "10px 14px", color: "#888" }}>{m.runtime ? `${m.runtime}m` : "—"}</td>
-                <td style={{ padding: "10px 14px", textAlign: "center" }}>
-                  <button
-                    onClick={() => toggleWatched(m.title)}
-                    style={{ background: m.watched ? "#22c55e22" : "transparent", border: `1px solid ${m.watched ? "#22c55e" : "#333"}`, borderRadius: 4, padding: "3px 10px", color: m.watched ? "#22c55e" : "#555", fontSize: 11, cursor: "pointer" }}
-                  >
-                    {m.watched ? "✓ Seen" : "Mark"}
-                  </button>
-                </td>
+        {/* Desktop table */}
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                {[["Title","title"],["Year","year"],["RT%","rt"],["Audience%","audience"],["Genre","genre"],["Vibe","vibe"],["Rating","rating"],["Runtime","runtime"]].map(([label, col]) => (
+                  <th key={col} className={sortKey === col ? "active" : ""} onClick={() => handleSort(col)}>
+                    {label}<SortIcon col={col} />
+                  </th>
+                ))}
+                <th>Watched</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filtered.map(m => (
+                <tr key={m.title} className={m.watched ? "watched" : ""}>
+                  <td className="title-cell">{m.title}</td>
+                  <td className="year-cell">{m.year}</td>
+                  <td style={{ color: rtColor(m.rt), fontWeight: 600 }}>{m.rt !== null ? `${m.rt}%` : "—"}</td>
+                  <td style={{ color: audienceColor(m.audience), fontWeight: 600 }}>{m.audience !== null ? `${m.audience}%` : "—"}</td>
+                  <td className="genre-cell">{m.genre}</td>
+                  <td><span className="vibe-pill">{m.vibe}</span></td>
+                  <td className="rating-cell">{m.rating}</td>
+                  <td className="runtime-cell">{m.runtime ? `${m.runtime}m` : "—"}</td>
+                  <td>
+                    <button className={`mark-btn${m.watched ? " seen" : ""}`} onClick={() => toggleWatched(m.title)}>
+                      {m.watched ? "✓ Seen" : "Mark"}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile cards */}
+        <div className="cards">
+          {filtered.map(m => (
+            <div key={m.title} className={`card${m.watched ? " watched" : ""}`}>
+              <div className="card-top">
+                <div>
+                  <div className="card-title">{m.title}</div>
+                  <div className="card-year">{m.year} &middot; {m.rating} &middot; {m.runtime ? `${m.runtime}m` : "—"}</div>
+                </div>
+                <button className={`mark-btn${m.watched ? " seen" : ""}`} onClick={() => toggleWatched(m.title)}>
+                  {m.watched ? "✓ Seen" : "Mark"}
+                </button>
+              </div>
+              <div className="card-scores">
+                <div className="score-item">
+                  <span className="score-label">RT</span>
+                  <span className="score-val" style={{ color: rtColor(m.rt) }}>{m.rt !== null ? `${m.rt}%` : "—"}</span>
+                </div>
+                <div className="score-item">
+                  <span className="score-label">Audience</span>
+                  <span className="score-val" style={{ color: audienceColor(m.audience) }}>{m.audience !== null ? `${m.audience}%` : "—"}</span>
+                </div>
+              </div>
+              <div className="card-tags">
+                <span className="tag">{m.genre}</span>
+                <span className="tag">{m.vibe}</span>
+              </div>
+              <div className="card-footer">
+                <span className="card-meta">{m.director}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <p className="footer-note">RT% = critics &middot; Audience% = verified audience &middot; Click any column header to sort</p>
       </div>
-      <p style={{ marginTop: 16, fontSize: 11, color: "#444", textAlign: "center" }}>
-        RT% = critics &middot; Audience% = verified audience &middot; Click any column header to sort
-      </p>
-    </div>
+    </>
   );
 }
